@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 class ShortUrlService {
 
     public function shortUrlList(Request $request) {
+        $perPage = $request->per_page ? $request->per_page : 10;
         $authUser = $request ->user();
         $authUser->load('role', 'tenant');
         $role = $authUser->role ? $authUser->role->name : null;
@@ -20,13 +21,13 @@ class ShortUrlService {
         }
         if($role== 'Super Admin') {
             //This is for SuperAdmin
-            $urls = ShortUrl::query()->get();
+            $urls = ShortUrl::query()->withoutGlobalScope('tenant')->paginate($perPage);
         }elseif($role== 'Admin') {
             //This is for Admin
-            $urls = ShortUrl::query()->where('tenant_id', $authUser->tenant_id)->get();
+            $urls = ShortUrl::query()->paginate($perPage);
         }elseif($role== 'Member') {
             //This is for Member
-            $urls = ShortUrl::query()->where('tenant_id', $authUser->tenant_id)->where('created_by', $authUser->id)->get();
+            $urls = ShortUrl::query()->where('created_by', $authUser->id)->paginate($perPage);
         }
         if(count($urls)>0) {
             $urls->load('tenant','createdBy');
@@ -55,7 +56,6 @@ class ShortUrlService {
             $url = new ShortUrl();
             $url->short_url = $code;
             $url->original_url = $request->original_url;
-            $url->tenant_id = $user->tenant_id;
             $url->created_by = $user->id;
             $url->save();
             return redirect()->route('shortUrlList')->with(['success' => 'Short url created successfully!']);

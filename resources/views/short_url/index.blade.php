@@ -119,6 +119,10 @@
                             </tbody>
                         </table>
                     </div>
+                    <!-- Pagination Links -->
+                    <div class="mt-4">
+                        {{ $urls->links() }}
+                    </div>
                 </div>
             </div>
         </div>
